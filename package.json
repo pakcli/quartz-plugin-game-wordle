@@ -1,23 +1,24 @@
 {
-  "name": "@quartz-community/plugin-template",
+  "name": "@quartz-community/plugin-game-wordle",
   "version": "0.1.0",
-  "description": "Template repository for Quartz community plugins.",
+  "description": "Interactive Wordle (Tebak Ketik) & Word Connect (Tebak Sambung) Dual-Mode educational game plugin for Quartz, dynamically populated from note titles, clues, and folders.",
   "type": "module",
   "license": "MIT",
   "author": "Quartz Community",
   "homepage": "https://quartz.jzhao.xyz",
   "repository": {
     "type": "git",
-    "url": "https://github.com/quartz-community/plugin-template"
+    "url": "https://github.com/quartz-community/plugin-game-wordle"
   },
   "keywords": [
     "quartz",
     "quartz-plugin",
-    "plugin-template",
-    "remark",
-    "rehype",
-    "mdast",
-    "hast"
+    "wordle",
+    "word-connect",
+    "game",
+    "flashcard",
+    "active-recall",
+    "education"
   ],
   "files": [
     "dist",
@@ -97,29 +98,20 @@
     "@changesets/cli": "^2.29.0"
   },
   "quartz": {
-    "name": "plugin-template",
-    "displayName": "Plugin Template",
-    "category": "transformer",
-    "version": "1.0.0",
+    "name": "plugin-game-wordle",
+    "displayName": "Wordle & Word Connect Game",
+    "category": "emitter",
+    "version": "0.1.0",
     "quartzVersion": ">=5.0.0",
     "dependencies": [],
-    "defaultOrder": 50,
+    "defaultOrder": 60,
     "defaultEnabled": true,
     "defaultOptions": {},
-    "optionSchema": {
-      "highlightToken": {
-        "type": "enum",
-        "values": [
-          "==",
-          "**",
-          "~~"
-        ]
-      }
-    },
+    "optionSchema": {},
     "components": {
-      "ExampleComponent": {
-        "displayName": "Example Component",
-        "defaultPosition": "right",
+      "WordleGame": {
+        "displayName": "Wordle & Word Connect Game Widget",
+        "defaultPosition": "center",
         "defaultPriority": 50
       }
     }

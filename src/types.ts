@@ -17,46 +17,94 @@ export type {
   VirtualPage,
   QuartzPageTypePlugin,
   QuartzPageTypePluginInstance,
+  QuartzComponent,
+  QuartzComponentProps,
+  QuartzComponentConstructor,
 } from "@quartz-community/types";
 
-export interface ExampleTransformerOptions {
-  /** Token used to highlight text, defaults to ==highlight== */
-  highlightToken: string;
-  /** Add a CSS class to all headings in the rendered HTML. */
-  headingClass: string;
-  /** Enable remark-gfm for tables/task lists. */
-  enableGfm: boolean;
-  /** Enable adding slug IDs to headings. */
-  addHeadingSlugs: boolean;
+export type WordLengthLevel = "short" | "medium" | "long";
+export type WordleGameMode = "typing" | "connect";
+export type WordleAllowedModes = "both" | "typing" | "connect";
+export type WordleBuildMode = "dev" | "production";
+
+export interface WordItem {
+  id: string;
+  word: string;
+  clue: string;
+  explanation: string;
+  slug: string;
+  folder: string;
+  tags: string[];
+  level: WordLengthLevel;
+  lang?: string;
+  isAlias?: boolean;
+  parentTitle?: string;
 }
 
-export interface ExampleFilterOptions {
-  /** Allow pages marked draft: true to publish. */
-  allowDrafts: boolean;
-  /** Exclude pages that contain any of these frontmatter tags. */
-  excludeTags: string[];
-  /** Exclude paths that start with any of these prefixes (relative to content root). */
-  excludePathPrefixes: string[];
+export interface WordleManifest {
+  generator: string;
+  buildMode: WordleBuildMode;
+  generatedAt: string;
+  folders: string[];
+  languages: string[];
+  allowedModes: WordleAllowedModes;
+  totalWords: number;
+  words: WordItem[];
+  devStats?: {
+    totalScannedNotes: number;
+    skippedDrafts: number;
+    skippedInvalidLength: number;
+    skippedExcludedFolder: number;
+    aliasCount: number;
+  };
 }
 
-export interface ExampleEmitterOptions {
-  /** Filename to emit at the site root. */
+export interface WordleEmitterOptions {
+  /** Filename / slug to emit the JSON word bank manifest at (default: 'static/wordle-words') */
   manifestSlug: string;
-  /** Whether to include the frontmatter block in the manifest. */
-  includeFrontmatter: boolean;
-  /** Extra metadata to write at the top level of the manifest. */
-  metadata: Record<string, unknown>;
-  /** Optional hook to transform the emitted manifest JSON string. */
-  transformManifest?: (json: string) => string;
-  /** Add a custom class to the emitted manifest <script> tag if used in HTML. */
-  manifestScriptClass?: string;
+  /** Build mode: 'dev' logs detailed extraction diagnostics; 'production' produces compact outputs */
+  buildMode: WordleBuildMode;
+  /** Which modes to allow on build: 'both' | 'typing' | 'connect' (default: 'both') */
+  modes: WordleAllowedModes;
+  /** Filter to include only notes located in specific folder prefixes (e.g. ['Unsur', 'Senyawa']) */
+  sourceFolders?: string[];
+  /** Exclude notes from specific folders (e.g. ['templates', 'archive']) */
+  excludeFolders?: string[];
+  /** Whether to parse and include note title/filename as a target word (default: true) */
+  includeTitle: boolean;
+  /** Whether to parse Obsidian frontmatter `aliases:` as additional target words (default: true) */
+  includeAliases: boolean;
+  /** Language filter ('id', 'en', or 'all'; default: 'all') */
+  language: string;
+  /** Minimum character length for valid words (default: 3) */
+  minWordLength: number;
+  /** Maximum character length for valid words (default: 8) */
+  maxWordLength: number;
+  /** Only include notes with at least one of these tags (optional) */
+  allowedTags?: string[];
+  /** Optional custom word cleaner function */
+  cleanWord?: (rawWord: string) => string;
 }
 
-export interface ExampleComponentOptions {
-  /** Text to prefix before the title */
-  prefix?: string;
-  /** Text to suffix after the title */
-  suffix?: string;
-  /** CSS class name to apply */
+export interface WordleComponentOptions {
+  /** Title displayed at the top of the game widget */
+  title?: string;
+  /** Default active mode when loaded: 'typing' (Wordle) or 'connect' (Wheel) */
+  defaultMode?: WordleGameMode;
+  /** Build/runtime allowed modes: 'both' | 'typing' | 'connect' (default: 'both') */
+  modes?: WordleAllowedModes;
+  /** In dev mode, show word count debug badges & reload toggles */
+  devMode?: boolean;
+  /** Allow visitors to pick which folder / selected stuff to practice (default: true) */
+  allowFolderSelect?: boolean;
+  /** Allow language filter toggle if multiple languages are detected (default: true) */
+  allowLanguageSelect?: boolean;
+  /** Relative URL to fetch the word bank JSON manifest from (default: '/static/wordle-words.json') */
+  dataUrl?: string;
+  /** Initial selected folder filter (optional) */
+  initialFolder?: string;
+  /** Initial selected language (optional, e.g. 'id') */
+  initialLanguage?: string;
+  /** Additional CSS class name */
   className?: string;
 }

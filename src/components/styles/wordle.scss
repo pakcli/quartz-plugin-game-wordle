@@ -1,0 +1,637 @@
+.quartz-game-wordle-root {
+  --qgw-bg: var(--light, #f8fafc);
+  --qgw-surface: var(--lightgray, #f1f5f9);
+  --qgw-border: var(--gray, #cbd5e1);
+  --qgw-text: var(--dark, #0f172a);
+  --qgw-muted: var(--darkgray, #64748b);
+  --qgw-accent: var(--secondary, #3b82f6);
+  --qgw-green: #22c55e;
+  --qgw-yellow: #eab308;
+  --qgw-ice: #94a3b8;
+  --qgw-bevel-green: #15803d;
+  --qgw-bevel-yellow: #a16207;
+  --qgw-bevel-ice: #64748b;
+  --qgw-tile-border: #94a3b8;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 580px;
+  margin: 1.5rem auto;
+  padding: 1.25rem;
+  background: var(--qgw-surface);
+  border: 1px solid var(--qgw-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  font-family: inherit;
+  color: var(--qgw-text);
+  box-sizing: border-box;
+  user-select: none;
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Loading State */
+  .qgw-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 2.5rem 1rem;
+    color: var(--qgw-muted);
+    font-size: 0.95rem;
+
+    .qgw-spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--qgw-border);
+      border-top-color: var(--qgw-accent);
+      border-radius: 50%;
+      animation: qgw-spin 0.8s linear infinite;
+    }
+  }
+
+  /* Header & Filter Controls */
+  .qgw-header {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid var(--qgw-border);
+    padding-bottom: 1rem;
+
+    .qgw-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .qgw-stats-badge {
+        font-size: 0.8rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 9999px;
+        background: var(--qgw-bg);
+        border: 1px solid var(--qgw-border);
+        color: var(--qgw-muted);
+      }
+    }
+
+    .qgw-filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+
+      label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--qgw-muted);
+      }
+
+      select {
+        padding: 0.35rem 0.75rem;
+        font-size: 0.85rem;
+        border-radius: 6px;
+        border: 1px solid var(--qgw-border);
+        background: var(--qgw-bg);
+        color: var(--qgw-text);
+        cursor: pointer;
+        outline: none;
+
+        &:focus {
+          border-color: var(--qgw-accent);
+        }
+      }
+    }
+
+    .qgw-mode-switch {
+      display: flex;
+      width: 100%;
+      background: var(--qgw-bg);
+      border: 1px solid var(--qgw-border);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 4px;
+
+      button {
+        flex: 1;
+        padding: 0.45rem 0.6rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--qgw-muted);
+        cursor: pointer;
+        transition: all 0.15s ease;
+
+        &.active {
+          background: var(--qgw-accent);
+          color: #ffffff;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+      }
+    }
+  }
+
+  /* Clue Card */
+  .qgw-clue-card {
+    width: 100%;
+    background: var(--qgw-bg);
+    border: 1px solid var(--qgw-border);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    .qgw-clue-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--qgw-accent);
+    }
+
+    .qgw-clue-text {
+      font-size: 0.95rem;
+      line-height: 1.45;
+      color: var(--qgw-text);
+    }
+  }
+
+  /* Chiclet Fake 3D Button Style */
+  .qgw-chiclet-btn {
+    border: 1px solid var(--qgw-border);
+    border-bottom: 3.5px solid var(--qgw-border);
+    background: var(--qgw-bg);
+    color: var(--qgw-text);
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.08s ease, border-bottom-width 0.08s ease;
+
+    &:active {
+      transform: translateY(2.5px);
+      border-bottom-width: 1px;
+    }
+  }
+
+  /* ========================================================
+     MODE 1: TEBAK KETIK (WORDLE ENGINE)
+     ======================================================== */
+  .qgw-typing-view {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+
+    .qgw-sdm-meter {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+
+      .qgw-sdm-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        font-weight: 700;
+
+        .qgw-sdm-label {
+          color: var(--qgw-accent);
+        }
+      }
+
+      .qgw-sdm-bar-bg {
+        width: 100%;
+        height: 6px;
+        background: var(--qgw-border);
+        border-radius: 999px;
+        overflow: hidden;
+
+        .qgw-sdm-bar-fill {
+          height: 100%;
+          background: var(--qgw-accent);
+          transition: width 0.3s ease;
+        }
+      }
+    }
+
+    .qgw-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin: 0.5rem 0;
+
+      .qgw-row {
+        display: flex;
+        gap: 0.4rem;
+        justify-content: center;
+
+        &.qgw-shake {
+          animation: qgw-shake 0.45s ease-in-out;
+        }
+
+        .qgw-tile {
+          width: 44px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.25rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          border-radius: 6px;
+          border: 2px solid var(--qgw-tile-border);
+          border-bottom: 3.5px solid var(--qgw-tile-border);
+          background: var(--qgw-bg);
+          color: var(--qgw-text);
+          transition: all 0.15s ease;
+
+          &.active {
+            border-color: var(--qgw-accent);
+            animation: qgw-pop 0.1s ease-in-out;
+          }
+
+          &.right {
+            background: var(--qgw-green);
+            border-color: var(--qgw-bevel-green);
+            color: #ffffff;
+          }
+
+          &.wrong-pos {
+            background: var(--qgw-yellow);
+            border-color: var(--qgw-bevel-yellow);
+            color: #ffffff;
+          }
+
+          &.wrong {
+            background: var(--qgw-ice);
+            border-color: var(--qgw-bevel-ice);
+            color: #ffffff;
+          }
+
+          &.flip {
+            animation: qgw-flip 0.4s ease forwards;
+          }
+        }
+      }
+    }
+
+    .qgw-tools-row {
+      display: flex;
+      gap: 0.5rem;
+      width: 100%;
+      justify-content: space-between;
+
+      button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+      }
+    }
+
+    /* Virtual Keyboard */
+    .qgw-keyboard {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      width: 100%;
+      max-width: 480px;
+
+      .qgw-kb-row {
+        display: flex;
+        justify-content: center;
+        gap: 0.3rem;
+
+        .qgw-key {
+          flex: 1;
+          height: 42px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.95rem;
+          font-weight: 700;
+          border-radius: 5px;
+          border: 1px solid var(--qgw-border);
+          border-bottom: 3px solid var(--qgw-border);
+          background: var(--qgw-bg);
+          color: var(--qgw-text);
+          cursor: pointer;
+          touch-action: manipulation;
+          transition: transform 0.08s ease;
+
+          &:active {
+            transform: translateY(2px);
+            border-bottom-width: 1px;
+          }
+
+          &.qgw-key-wide {
+            flex: 1.5;
+            font-size: 0.75rem;
+          }
+
+          &.right {
+            background: var(--qgw-green);
+            border-color: var(--qgw-bevel-green);
+            color: #ffffff;
+          }
+
+          &.wrong-pos {
+            background: var(--qgw-yellow);
+            border-color: var(--qgw-bevel-yellow);
+            color: #ffffff;
+          }
+
+          &.wrong {
+            background: var(--qgw-ice);
+            border-color: var(--qgw-bevel-ice);
+            color: #ffffff;
+            opacity: 0.5;
+          }
+        }
+      }
+    }
+  }
+
+  /* ========================================================
+     MODE 2: TEBAK SAMBUNG (CONNECT WHEEL ENGINE)
+     ======================================================== */
+  .qgw-connect-view {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+
+    .qgw-word-slots {
+      display: flex;
+      gap: 0.45rem;
+      justify-content: center;
+      min-height: 48px;
+
+      &.qgw-shake {
+        animation: qgw-shake 0.45s ease-in-out;
+      }
+
+      .qgw-slot {
+        width: 42px;
+        height: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        border-radius: 6px;
+        border: 2px dashed var(--qgw-border);
+        border-bottom: 3px solid var(--qgw-border);
+        background: var(--qgw-bg);
+        color: var(--qgw-text);
+        transition: all 0.15s ease;
+
+        &.filled {
+          border-style: solid;
+          border-color: var(--qgw-accent);
+          color: var(--qgw-accent);
+          animation: qgw-pop 0.12s ease-in-out;
+        }
+
+        &.correct {
+          background: var(--qgw-green);
+          border-color: var(--qgw-bevel-green);
+          color: #ffffff;
+        }
+      }
+    }
+
+    .qgw-wheel-wrap {
+      position: relative;
+      width: 260px;
+      height: 260px;
+      touch-action: none;
+
+      .qgw-wheel-platter {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: radial-gradient(circle, var(--qgw-bg) 60%, var(--qgw-surface) 100%);
+        border: 2px solid var(--qgw-border);
+        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.06);
+        position: relative;
+      }
+
+      .qgw-svg-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 2;
+
+        line {
+          stroke: var(--qgw-accent);
+          stroke-width: 5;
+          stroke-linecap: round;
+          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+      }
+
+      .qgw-letter-node {
+        position: absolute;
+        width: 52px;
+        height: 52px;
+        transform: translate(-50%, -50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        font-weight: 800;
+        border-radius: 50%;
+        background: var(--qgw-bg);
+        border: 2px solid var(--qgw-border);
+        border-bottom: 3.5px solid var(--qgw-border);
+        color: var(--qgw-text);
+        z-index: 3;
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+
+        &.selected {
+          background: var(--qgw-accent);
+          border-color: var(--qgw-accent);
+          color: #ffffff;
+          transform: translate(-50%, -50%) scale(1.12);
+          box-shadow: 0 4px 10px rgba(59, 130, 246, 0.35);
+        }
+      }
+    }
+
+    .qgw-connect-actions {
+      display: flex;
+      gap: 0.75rem;
+
+      button {
+        padding: 0.45rem 0.9rem;
+        font-size: 0.85rem;
+      }
+    }
+  }
+
+  /* ========================================================
+     VICTORY RECAP / EXPLANATION MODAL
+     ======================================================== */
+  .qgw-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 1rem;
+
+    .qgw-modal-card {
+      background: var(--qgw-bg);
+      border: 1px solid var(--qgw-border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 1rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      animation: qgw-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+      .qgw-modal-badge {
+        background: #dcfce7;
+        color: #15803d;
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 999px;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 1.6rem;
+        letter-spacing: 0.05em;
+        color: var(--qgw-green);
+      }
+
+      .qgw-target-word-display {
+        font-size: 1.8rem;
+        font-weight: 900;
+        letter-spacing: 0.15em;
+        color: var(--qgw-text);
+        padding: 0.4rem 1rem;
+        border-bottom: 2px solid var(--qgw-border);
+      }
+
+      .qgw-explanation-box {
+        background: var(--qgw-surface);
+        border: 1px solid var(--qgw-border);
+        border-radius: 8px;
+        padding: 0.85rem;
+        font-size: 0.92rem;
+        line-height: 1.5;
+        text-align: left;
+        color: var(--qgw-text);
+      }
+
+      .qgw-modal-actions {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 0.6rem;
+
+        a.qgw-btn-read-note {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.4rem;
+          padding: 0.7rem 1rem;
+          background: var(--qgw-accent);
+          color: #ffffff;
+          text-decoration: none;
+          font-weight: 700;
+          font-size: 0.95rem;
+          border-radius: 8px;
+          border-bottom: 3px solid #1d4ed8;
+
+          &:hover {
+            opacity: 0.95;
+          }
+        }
+
+        button.qgw-btn-next-round {
+          padding: 0.65rem 1rem;
+          font-size: 0.9rem;
+        }
+      }
+    }
+  }
+
+  /* Keyframe Animations */
+  @keyframes qgw-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes qgw-pop {
+    0% {
+      transform: scale(0.85);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes qgw-shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    20%,
+    60% {
+      transform: translateX(-6px);
+    }
+    40%,
+    80% {
+      transform: translateX(6px);
+    }
+  }
+
+  @keyframes qgw-flip {
+    0% {
+      transform: rotateX(0);
+    }
+    50% {
+      transform: rotateX(90deg);
+    }
+    100% {
+      transform: rotateX(0);
+    }
+  }
+}
